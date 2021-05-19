@@ -30,17 +30,17 @@ fun typecheck(e:exp,env:typeenvironment ref):vartype=
 
   	evaltypeFun(s1:id,s2:id,v1:vartype,v2:vartype,e:exp,env:typeenvironment ref)=
   	case v1 of 
-  		ARROW(a,b) => if b=v2 then ARROW(v1,v2) else raise brokenTypes
-  		| _  => raise brokenTypes
+  		ARROW(a,b) => if b=v2 then ARROW(v1,v2) else raise Fail "Function Type Mis-match"
+  		| _  => raise Fail "Function Type Mis-match"
   	
   	and
 
       evaltypeAppExp(e1:exp,e2:exp,env:typeenvironment ref)= 
       case e1 of
       	VarExp v =>(case typeenvLookup (v,env) of 
-      	ARROW(v11:vartype,v22:vartype)=> if v11=typecheck(e2,env) then v22 else raise brokenTypes 
-      	| _ => raise brokenTypes)
-      	| _=> raise brokenTypes
+      	ARROW(v11:vartype,v22:vartype)=> if v11=typecheck(e2,env) then v22 else raise Fail "Argument of App-Exp is not of desired type" 
+      	| _ => raise Fail "Argument of App-Exp is not of desired type")
+      	| _=> raise Fail "Not a function in argument"
 
       	
 	and
@@ -53,7 +53,7 @@ fun typecheck(e:exp,env:typeenvironment ref):vartype=
     typeenvLookup (var:id, env:typeenvironment ref) =
     case List.find(fn (x, _) => x = var) (!env) of
 				       SOME (x, v)   => v
-				    |   NONE => raise brokenTypes
+				    |   NONE => raise Fail "Type-Environment LookUp Error"
 	and
 
    evaltypeBinExp(b:binop, e1:exp, e2:exp, env:typeenvironment ref):vartype =
@@ -62,7 +62,7 @@ fun typecheck(e:exp,env:typeenvironment ref):vartype=
 	  |   (Sub, INT,INT) => INT
 	  |   (Mul, INT,INT) => INT
 	  
-	  |   _  => raise brokenTypes 
+	  |   _  => raise Fail "Type Mismatch for Binary-Expression"
    
 
   and
@@ -76,7 +76,7 @@ fun typecheck(e:exp,env:typeenvironment ref):vartype=
 	  |   (Eq, INT,INT)  => BOOL
 	  |   (Greaterthan,INT,INT) => BOOL
 	  |   (Lessthan,INT,INT)  => BOOL
-	  |   _  => raise brokenTypes 
+	  |   _  => raise Fail "Type Mismatch for Bool-Binary-Expression" 
    
 
   and
@@ -84,7 +84,7 @@ fun typecheck(e:exp,env:typeenvironment ref):vartype=
   evaltypeBrackExp(u:brack,v:brack,e1:exp,env:typeenvironment ref):vartype =
 	case (u,v,e1)  of
 	     (LPAREN,RPAREN,e1) => typecheck(e1,env)
-	  |   _  => raise brokenTypes
+	  |   _  => raise Fail "Exp not of INT Type"
   
 
 and
@@ -92,7 +92,7 @@ and
   evaltypeNegateExp(u:unop, e1:exp,env:typeenvironment ref):vartype =
 	case (u,typecheck(e1,env))  of
 	  (Negate,INT) => INT
-	  |   _  => raise brokenTypes
+	  |   _  => raise Fail "Exp not of INT Type"
   
 
 and
@@ -100,7 +100,7 @@ and
 	evaltypeBoolNegateExp(u:boolunop, e1:exp,env:typeenvironment ref):vartype =
 	case (u,typecheck(e1,env))  of
 	      (NOT,BOOL) => BOOL
-	  |   _  => raise brokenTypes
+	  |   _  => raise Fail "Exp not of BOOL Type"
   
 
 and
@@ -108,8 +108,8 @@ and
 evaltypeCondExp(a:cond,e1:exp,b:cond,e2:exp,c:cond,e3:exp,d:cond,env:typeenvironment ref):vartype =
 case (a,typecheck(e1,env),b,e2,c,e3,d)  of
       (IF,BOOL,THEN,e2,ELSE,e3,FI) => if (typecheck(e2,env)=typecheck(e3,env))
-      								  then typecheck(e2,env) else raise brokenTypes
-  |   _  => raise brokenTypes
+      								  then typecheck(e2,env) else raise Fail "IF-ELSE Clauses have different Types"
+  |   _  => raise Fail "Improper Format for IF-ELSE Statement"
 
 
 
